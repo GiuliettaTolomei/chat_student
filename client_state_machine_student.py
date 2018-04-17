@@ -2,6 +2,8 @@
 Created on Sun Apr  5 00:00:32 2015
 
 @author: zhengzhang
+
+Modified: Katie Pellegrino (15 April 2018)
 """
 from chat_utils import *
 import json
@@ -108,8 +110,10 @@ class ClientSM:
             if len(peer_msg) > 0:
                 peer_msg = json.loads(peer_msg)
                 if peer_msg["action"] == "connect":
-                    pass
-
+                    self.state = S_CHATTING
+                    peer_name = peer_msg["from"]
+                    self.out_msg = "You have connected with" + peer_name + "."
+                    self.peer += peer_name
 #==============================================================================
 # Start chatting, 'bye' for quit
 # This is event handling instate "S_CHATTING"
@@ -123,9 +127,15 @@ class ClientSM:
                     self.peer = ''
             if len(peer_msg) > 0:    # peer's stuff, coming in
                 peer_msg = json.loads(peer_msg)
-                pass
-
-
+                if peer_msg["action"] == "exchange":
+                    message = peer_msg["message"]
+                    self.out_msg = peer_msg["from"] + ": " + message
+                elif peer_msg["action"] == "disconnect":
+                    self.disconnect()
+                    self.state = S_LOGGEDIN
+                    self.peer = ''
+                elif peer_msg["action"] == "connect":
+                    self.out_msg = "Someone just joined your chat."                 
             # Display the menu again
             if self.state == S_LOGGEDIN:
                 self.out_msg += menu

@@ -112,7 +112,7 @@ class ClientSM:
                 if peer_msg["action"] == "connect":
                     self.state = S_CHATTING
                     peer_name = peer_msg["from"]
-                    self.out_msg = "You have connected with" + peer_name + "."
+                    self.out_msg = "You have connected with " + peer_name + ". Chat away!\n\n-----------------------------------\n"
                     self.peer += peer_name
 #==============================================================================
 # Start chatting, 'bye' for quit
@@ -135,7 +135,7 @@ class ClientSM:
                     self.state = S_LOGGEDIN
                     self.peer = ''
                 elif peer_msg["action"] == "connect":
-                    self.out_msg = "Someone just joined your chat."                 
+                    self.out_msg = "Someone just joined your chat! Say 'hi,' (it could be a spy)."                 
             # Display the menu again
             if self.state == S_LOGGEDIN:
                 self.out_msg += menu

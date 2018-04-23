@@ -4,9 +4,10 @@ import select
 import sys
 import json
 from chat_utils import *
-import client_state_machine_student as csm
+import client_state_machine as csm
 
 import threading
+
 
 class Client:
     def __init__(self, args):
@@ -26,7 +27,7 @@ class Client:
         return self.name
 
     def init_chat(self):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM )
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         svr = SERVER if self.args.d == None else (self.args.d, CHAT_PORT)
         self.socket.connect(svr)
         self.sm = csm.ClientSM(self.socket)
@@ -63,7 +64,7 @@ class Client:
         my_msg, peer_msg = self.get_msgs()
         if len(my_msg) > 0:
             self.name = my_msg
-            msg = json.dumps({"action":"login", "name":self.name})
+            msg = json.dumps({"action": "login", "name": self.name})
             self.send(msg)
             response = json.loads(self.recv())
             if response["status"] == 'ok':
@@ -78,11 +79,11 @@ class Client:
         else:               # fix: dup is only one of the reasons
            return(False)
 
-
     def read_input(self):
         while True:
             text = sys.stdin.readline()[:-1]
-            self.console_input.append(text) # no need for lock, append is thread safe
+            # no need for lock, append is thread safe
+            self.console_input.append(text)
 
     def print_instructions(self):
         self.system_msg += menu

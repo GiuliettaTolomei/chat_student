@@ -1,6 +1,9 @@
 """
 Created on Tue Jul 22 00:47:05 2014
 @author: alina, zzhang
+
+Modified: Katie Pellegrino (23 April 2018)
+
 """
 
 import time
@@ -58,17 +61,14 @@ class Server:
                         #load chat history of that user
                         if name not in self.indices.keys():
                             try:
-                                self.indices[name] = pkl.load(
-                                    open(name+'.idx', 'rb'))
+                                self.indices[name] = pkl.load(open(name+'.idx', 'rb'))
                             except IOError:  # chat index does not exist, then create one
                                 self.indices[name] = indexer.Index(name)
                         print(name + ' logged in')
                         self.group.join(name)
-                        mysend(sock, json.dumps(
-                            {"action": "login", "status": "ok"}))
+                        mysend(sock, json.dumps({"action": "login", "status": "ok"}))
                     else:  # a client under this name has already logged in
-                        mysend(sock, json.dumps(
-                            {"action": "login", "status": "duplicate"}))
+                        mysend(sock, json.dumps({"action": "login", "status": "duplicate"}))
                         print(name + ' duplicate login attempt')
                 else:
                     print('wrong code received')
@@ -109,15 +109,12 @@ class Server:
                     to_sock = self.logged_name2sock[to_name]
                     self.group.connect(from_name, to_name)
                     the_guys = self.group.list_me(from_name)
-                    msg = json.dumps(
-                        {"action": "connect", "status": "success"})
+                    msg = json.dumps({"action": "connect", "status": "success"})
                     for g in the_guys[1:]:
                         to_sock = self.logged_name2sock[g]
-                        mysend(to_sock, json.dumps(
-                            {"action": "connect", "status": "request", "from": from_name}))
+                        mysend(to_sock, json.dumps({"action": "connect", "status": "request", "from": from_name}))
                 else:
-                    msg = json.dumps(
-                        {"action": "connect", "status": "no-user"})
+                    msg = json.dumps({"action": "connect", "status": "no-user"})
                 mysend(from_sock, msg)
 #==============================================================================
 # handle messeage exchange: IMPLEMENT THIS
@@ -126,14 +123,17 @@ class Server:
                 from_name = self.logged_sock2name[from_sock]
                 # Finding the list of people to send to
                 # and index message
-                pass
                 the_guys = self.group.list_me(from_name)[1:]
+#=================================================================================
+                self.indices[from_name].add_msg_and_index(msg['message'])
+#=================================================================================
                 for g in the_guys:
                     to_sock = self.logged_name2sock[g]
-                    pass
-                    mysend(
-                        to_sock, "...Remember to index the messages before sending, or search won't work")
-
+#=================================================================================
+                    new_mes = json.dumps({'action':'exchange', 'message': msg['message'], 'from':'['+ from_name +']'})
+#=================================================================================
+                    mysend(to_sock, new_mes)
+#=================================================================================
 #==============================================================================
 # the "from" guy has had enough (talking to "to")!
 #==============================================================================
@@ -150,35 +150,33 @@ class Server:
 #                 listing available peers: IMPLEMENT THIS
 #==============================================================================
             elif msg["action"] == "list":
-                pass
-                msg = "needs to use self.group functions to work"
-                mysend(from_sock, json.dumps(
-                    {"action": "list", "results": msg}))
+#==============================================================================
+                msg = self.group.list_all('')
+#==============================================================================
+                mysend(from_sock, json.dumps({"action": "list", "results": msg}))
 #==============================================================================
 #             retrieve a sonnet : IMPLEMENT THIS
 #==============================================================================
             elif msg["action"] == "poem":
-                pass
-                poem = "needs to use self.sonnet functions to work"
+                poem = " You're requested poem:\n" + self.sonnet.get_sect(int(msg['target']))
                 print('here:\n', poem)
-                mysend(from_sock, json.dumps(
-                    {"action": "poem", "results": poem}))
+                mysend(from_sock, json.dumps({"action": "poem", "results": poem}))
 #==============================================================================
 #                 time
 #==============================================================================
             elif msg["action"] == "time":
                 ctime = time.strftime('%d.%m.%y,%H:%M', time.localtime())
-                mysend(from_sock, json.dumps(
-                    {"action": "time", "results": ctime}))
+                mysend(from_sock, json.dumps({"action": "time", "results": ctime}))
 #==============================================================================
 #                 search: : IMPLEMENT THIS
 #==============================================================================
             elif msg["action"] == "search":
-                pass  # get search search_rslt
-                search_rslt = "needs to use self.indices search to work"
+                search_rslt = " "
+                # get search search_rslt
+                for k in self.indices.keys():
+                    search_rslt += self.indices[k].search(msg['target'])
                 print('server side search: ' + search_rslt)
-                mysend(from_sock, json.dumps(
-                    {"action": "search", "results": search_rslt}))
+                mysend(from_sock, json.dumps({"action": "search", "results": search_rslt}))
 
 #==============================================================================
 #                 the "from" guy really, really has had enough
